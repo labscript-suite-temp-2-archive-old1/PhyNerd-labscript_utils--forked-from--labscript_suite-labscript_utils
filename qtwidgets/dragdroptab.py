@@ -117,7 +117,7 @@ class DragDropTabBar(QTabBar):
 
     def moveTab(self, source_index, dest_index):
         """Move tab fron one index to another. Overriding this is not
-        neccesary in PyQt5, the base implementation works fine. But there
+        necessary in PyQt5, the base implementation works fine. But there
         seems to be a bug in PyQt4 which temporarily shows the wrong page
         (though the right tab is active) after a moveTab,---at least, when
         it's called like we call it during the processing of a mouseMoveEvent.
@@ -136,6 +136,8 @@ class DragDropTabBar(QTabBar):
             if dest is limbo:
                 # Set the mouse cursor to a picture of the tab:
                 rect = self.dragged_tab_parent.tabRect(self.dragged_tab_index)
+                # Get the right border of the tab too:
+                rect.setWidth(rect.width() + 1)
                 pixmap = QPixmap(rect.size())
                 self.dragged_tab_parent.render(pixmap, QPoint(), QRegion(rect));
                 cursor = QCursor(pixmap)
@@ -262,9 +264,10 @@ class DragDropTabBar(QTabBar):
             if self.group_id is not None:
                 self.set_tab_parent(widget)
             other_local_pos = widget.mapFromGlobal(self.mapToGlobal(event.pos()))
-            self.dragged_tab_index = widget.update_tab_index(self.dragged_tab_index,
-                                                             other_local_pos)
-
+            widget.update_tab_index(self.dragged_tab_index, other_local_pos)
+        # Clear the variables about which tab is being dragged:
+        self.dragged_tab_index = None
+        self.dragged_tab_parent = None
 
 class DragDropTabWidget(QTabWidget):
     """A tab widget that supports dragging and dropping of tabs between tab
