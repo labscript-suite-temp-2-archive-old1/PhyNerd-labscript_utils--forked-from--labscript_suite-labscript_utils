@@ -70,12 +70,12 @@ class UnitConversion(object):
         for unit in self.units:
             for derived_unit in self.derived_units:
                 #if derived_unit == unit[2]:
-                exec("def "+unit[0]+derived_unit+"_to_base(self,value): return self."+derived_unit+"_to_base(value)*"+unit[1])
-                exec ("a="+unit[0]+derived_unit+"_to_base")
-                self.__dict__[unit[0]+derived_unit+"_to_base"] = MethodType(locals()['a'],self)
-                exec("def "+unit[0]+derived_unit+"_from_base(self,value): return self."+derived_unit+"_from_base(value/float("+unit[1]+"))")
-                exec ("a="+unit[0]+derived_unit+"_from_base")
-                self.__dict__[unit[0]+derived_unit+"_from_base"] = MethodType(locals()['a'],self)
+                exec("def "+unit[0]+derived_unit+"_to_base(self,value): return self."+derived_unit+"_to_base(value)*"+unit[1], globals())
+                exec ("a="+unit[0]+derived_unit+"_to_base", globals())
+                self.__dict__[unit[0]+derived_unit+"_to_base"] = MethodType(a,self)
+                exec("def "+unit[0]+derived_unit+"_from_base(self,value): return self."+derived_unit+"_from_base(value/float("+unit[1]+"))", globals())
+                exec ("a="+unit[0]+derived_unit+"_from_base", globals())
+                self.__dict__[unit[0]+derived_unit+"_from_base"] = MethodType(a,self)
 
         # Make another loop to stop infinite regression!
         derived_copy = copy.copy(self.derived_units)
