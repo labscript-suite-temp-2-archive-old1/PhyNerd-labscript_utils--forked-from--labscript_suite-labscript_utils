@@ -21,6 +21,7 @@ import copy
 import ast
 from labscript_utils.dict_diff import dict_diff
 from labscript_utils import PY2 
+from labscript.labscript import _RemoteBLACSConnection
 if PY2:
     str = unicode
 
@@ -156,8 +157,21 @@ class ConnectionTable(object):
         attached_devices = {}
         for name, device in self.table.items():
             if device.BLACS_connection:
+                # Skip devices that are neither local nor Remote Workers
+                if device.remote_connections is not None:
+                    if len(device.remote_connections) != 1 or self.find_by_name(device.remote_connections[0]).device_class != 'RemoteWorkerBroker':
+                        continue
+                        
+                # Skip RemoteWorkerBrokers and SecondaryControlSystems as they are no devices
+                if device.device_class == 'RemoteWorkerBroker':
+                    continue
+                elif device.device_class == 'SecondaryControlSystem':
+                    # ToDo: Handle Secondary Control Systems
+                    continue
+                
                 # The device is connected to BLACS. Save its name and class:
                 attached_devices[name] = device.device_class
+
         return attached_devices
         
     # Returns the "Connection" object which is a child of "parent_name",
@@ -209,7 +223,9 @@ class Connection(object):
         self.parent_port = self._rowdict['parent port']
         self.unit_conversion_class = self._rowdict['unit conversion class']
         self._unit_conversion_params = self._rowdict['unit conversion params']
-        self.BLACS_connection = self._rowdict['BLACS_connection']
+        connections = self._rowdict['BLACS_connection'].split(_RemoteBLACSConnection.delimeter)
+        self.BLACS_connection = connections[-1]
+        self.remote_connections = connections[:-1] if len(connections) > 1 else None
         self._properties = self._rowdict['properties']
         
         # To be populated by self._populate_relatives:
